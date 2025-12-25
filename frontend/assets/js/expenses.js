@@ -26,6 +26,7 @@
     const date = document.getElementById("expenseDate").value;
     const crop = document.getElementById("expenseCrop").value.trim();
     const category = document.getElementById("expenseCategory").value;
+    const season = document.getElementById("expenseSeason").value;
     const description = document.getElementById("expenseDescription").value.trim();
     const amount = parseFloat(document.getElementById("expenseAmount").value);
 
@@ -38,6 +39,7 @@
       date: date || new Date().toISOString().split("T")[0],
       crop,
       category,
+      season: season || undefined,
       description,
       amount
     };
@@ -83,6 +85,18 @@
     ).join('');
   }
 
+  function getSeasonOptions(selectedSeason) {
+    const seasons = [
+      { value: '', label: 'None' },
+      { value: 'Kharif', label: '🌧️ Kharif' },
+      { value: 'Rabi', label: '❄️ Rabi' },
+      { value: 'Zaid', label: '☀️ Zaid' }
+    ];
+    return seasons.map(s =>
+      `<option value="${s.value}" ${s.value === selectedSeason ? "selected" : ""}>${s.label}</option>`
+    ).join('');
+  }
+
   // 🔹 Edit Expense (Updated for Dropdown)
   function editExpense(id) {
     const tbody = document.getElementById("expensesTableBody");
@@ -103,6 +117,12 @@
                ${getCategoryOptions(e.category)}
             </select>
           </td>
+
+          <td>
+            <select id="editSeason">
+               ${getSeasonOptions(e.season || '')}
+            </select>
+          </td>
           
           <td><input type="text" id="editDescription" value="${e.description || ""}" /></td>
           <td><input type="number" id="editAmount" value="${e.amount}" /></td>
@@ -112,11 +132,14 @@
           </td>
         </tr>`;
         } else {
+          const seasonEmoji = e.season === 'Kharif' ? '🌧️' : e.season === 'Rabi' ? '❄️' : e.season === 'Zaid' ? '☀️' : '-';
+          const seasonText = e.season || '-';
           return `
         <tr>
           <td>${e.date ? new Date(e.date).toLocaleDateString() : '-'}</td>
           <td><strong>${e.crop}</strong></td>
           <td><span class="category-badge ${e.category.toLowerCase()}">${e.category}</span></td>
+          <td>${seasonEmoji} ${seasonText}</td>
           <td>${e.description || "-"}</td>
           <td style="text-align:right;">₹${e.amount.toFixed(2)}</td>
           <td style="text-align:center;">
@@ -137,6 +160,7 @@
   async function saveEditedExpense(id) {
     const crop = document.getElementById("editCrop").value.trim();
     const category = document.getElementById("editCategory").value.trim();
+    const season = document.getElementById("editSeason").value;
     const description = document.getElementById("editDescription").value.trim();
     const amount = parseFloat(document.getElementById("editAmount").value);
     const date = document.getElementById("editDate").value;
@@ -146,7 +170,7 @@
       return;
     }
 
-    const updatedExpense = { crop, category, description, amount, date };
+    const updatedExpense = { crop, category, season: season || undefined, description, amount, date };
 
     try {
       const response = await window.SharedStorage.apiCall(`/api/expenses/${id}`, {
@@ -172,25 +196,29 @@
     if (!tbody) return;
 
     if (window.expenses.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#999; padding:40px;">No expenses recorded yet</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#999; padding:40px;">No expenses recorded yet</td></tr>`;
       return;
     }
 
     tbody.innerHTML = window.expenses
       .map(
-        exp => `
+        exp => {
+          const seasonEmoji = exp.season === 'Kharif' ? '🌧️' : exp.season === 'Rabi' ? '❄️' : exp.season === 'Zaid' ? '☀️' : '-';
+          const seasonText = exp.season || '-';
+          return `
         <tr>
           <td>${exp.date}</td>
           <td><strong>${exp.crop}</strong></td>
           <td><span class="category-badge">${exp.category}</span></td>
+          <td>${seasonEmoji} ${seasonText}</td>
           <td>${exp.description || "-"}</td>
           <td style="text-align:right;">₹${exp.amount.toFixed(2)}</td>
           <td style="text-align:center;">
-            <button class="edit-btn" onclick="editExpense(${exp._id})">✏️</button>
-            <button class="delete-btn" onclick="deleteExpense(${exp._id})">🗑️</button>
+            <button class="edit-btn" onclick="editExpense('${exp._id}')">✏️</button>
+            <button class="delete-btn" onclick="deleteExpense('${exp._id}')">🗑️</button>
           </td>
-        </tr>`
-      )
+        </tr>`;
+        })
       .join("");
   }
 

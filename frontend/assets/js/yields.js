@@ -21,12 +21,12 @@
     }
   }
 
-  // 🔹 Add Yield Record
   async function handleAddYield() {
     const date = document.getElementById("yieldDate").value;
     const crop = document.getElementById("yieldCrop").value.trim();
     const quantity = parseFloat(document.getElementById("yieldQuantity").value);
     const unit = document.getElementById("yieldUnit").value;
+    const season = document.getElementById("yieldSeason").value;
     const pricePerUnit = parseFloat(document.getElementById("yieldPrice").value);
 
     if (!crop || isNaN(quantity) || isNaN(pricePerUnit)) {
@@ -39,6 +39,7 @@
       crop,
       quantity,
       unit,
+      season: season || undefined,
       pricePerUnit
     };
 
@@ -74,6 +75,19 @@
     }
   }
 
+  // Helper for season options
+  function getSeasonOptions(selectedSeason) {
+    const seasons = [
+      { value: '', label: 'None' },
+      { value: 'Kharif', label: '🌧️ Kharif' },
+      { value: 'Rabi', label: '❄️ Rabi' },
+      { value: 'Zaid', label: '☀️ Zaid' }
+    ];
+    return seasons.map(s =>
+      `<option value="${s.value}" ${s.value === selectedSeason ? "selected" : ""}>${s.label}</option>`
+    ).join('');
+  }
+
   // 🔹 Edit Yield
   function editYield(id) {
     const tbody = document.getElementById("yieldsTableBody");
@@ -87,6 +101,11 @@
           <tr>
             <td><input type="date" id="editDate" value="${yld.date}" /></td>
             <td><input type="text" id="editCrop" value="${yld.crop}" /></td>
+            <td>
+              <select id="editSeason">
+                ${getSeasonOptions(yld.season || '')}
+              </select>
+            </td>
             <td><input type="number" id="editQuantity" value="${yld.quantity}" min="0" oninput="updateEditRevenue()" /></td>
             <td>
               <select id="editUnit">
@@ -100,21 +119,24 @@
             <td><input type="number" id="editPrice" value="${yld.pricePerUnit}" min="0" step="0.01" oninput="updateEditRevenue()" /></td>
             <td id="editTotal" style="text-align:right; color:#2e7d32;">₹${yld.totalRevenue.toFixed(2)}</td>
             <td style="text-align:center;">
-              <button class="save-btn" onclick="saveEditedYield(${yld._id})">💾</button>
+              <button class="save-btn" onclick="saveEditedYield('${yld._id}')"> 💾</button>
               <button class="cancel-btn" onclick="renderYieldsTable()">❌</button>
             </td>
           </tr>`;
         } else {
+          const seasonEmoji = yld.season === 'Kharif' ? '🌧️' : yld.season === 'Rabi' ? '❄️' : yld.season === 'Zaid' ? '☀️' : '-';
+          const seasonText = yld.season || '-';
           return `
           <tr>
             <td>${yld.date}</td>
             <td><strong>${yld.crop}</strong></td>
+            <td>${seasonEmoji} ${seasonText}</td>
             <td style="text-align:right;">${yld.quantity} ${yld.unit}</td>
             <td style="text-align:right;">₹${yld.pricePerUnit.toFixed(2)}</td>
             <td style="text-align:right; color:#2e7d32;">₹${yld.totalRevenue.toFixed(2)}</td>
             <td style="text-align:center;">
-              <button class="edit-btn" onclick="editYield(${yld._id})">✏️</button>
-              <button class="delete-btn" onclick="deleteYield(${yld._id})">🗑️</button>
+              <button class="edit-btn" onclick="editYield('${yld._id}')">✏️</button>
+              <button class="delete-btn" onclick="deleteYield('${yld._id}')">🗑️</button>
             </td>
           </tr>`;
         }
@@ -135,6 +157,7 @@
   // 🔹 Save Edited Yield
   async function saveEditedYield(id) {
     const crop = document.getElementById("editCrop").value.trim();
+    const season = document.getElementById("editSeason").value;
     const quantity = parseFloat(document.getElementById("editQuantity").value);
     const unit = document.getElementById("editUnit").value;
     const pricePerUnit = parseFloat(document.getElementById("editPrice").value);
@@ -146,7 +169,7 @@
     }
 
     const totalRevenue = quantity * pricePerUnit;
-    const updatedYield = { date, crop, quantity, unit, pricePerUnit, totalRevenue };
+    const updatedYield = { date, crop, season: season || undefined, quantity, unit, pricePerUnit, totalRevenue };
 
     try {
       const response = await window.SharedStorage.apiCall(`/api/yields/${id}`, {
@@ -172,24 +195,29 @@
     if (!tbody) return;
 
     if (window.yields.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#999; padding:40px;">No yield records yet</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#999; padding:40px;">No yield records yet</td></tr>`;
       return;
     }
 
     tbody.innerHTML = window.yields
       .map(
-        (yld) => `
+        (yld) => {
+          const seasonEmoji = yld.season === 'Kharif' ? '🌧️' : yld.season === 'Rabi' ? '❄️' : yld.season === 'Zaid' ? '☀️' : '-';
+          const seasonText = yld.season || '-';
+          return `
         <tr>
           <td>${yld.date}</td>
           <td><strong>${yld.crop}</strong></td>
+          <td>${seasonEmoji} ${seasonText}</td>
           <td style="text-align:right;">${yld.quantity} ${yld.unit}</td>
           <td style="text-align:right;">₹${yld.pricePerUnit.toFixed(2)}</td>
           <td style="text-align:right; color:#2e7d32;">₹${yld.totalRevenue.toFixed(2)}</td>
           <td style="text-align:center;">
-            <button class="edit-btn" onclick="editYield(${yld._id})">✏️</button>
-            <button class="delete-btn" onclick="deleteYield(${yld._id})">🗑️</button>
+            <button class="edit-btn" onclick="editYield('${yld._id}')">✏️</button>
+            <button class="delete-btn" onclick="deleteYield('${yld._id}')">🗑️</button>
           </td>
-        </tr>`
+        </tr>`;
+        }
       )
       .join("");
   }

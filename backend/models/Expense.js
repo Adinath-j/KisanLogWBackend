@@ -36,6 +36,14 @@ const expenseSchema = new mongoose.Schema({
       message: '{VALUE} is not a valid category'
     }
   },
+  season: {
+    type: String,
+    enum: {
+      values: ['Kharif', 'Rabi', 'Zaid'],
+      message: '{VALUE} is not a valid season'
+    },
+    trim: true
+  },
   description: {
     type: String,
     trim: true

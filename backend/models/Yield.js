@@ -16,6 +16,14 @@ const yieldSchema = new mongoose.Schema({
     required: [true, 'Crop name is required'],
     trim: true
   },
+  season: {
+    type: String,
+    enum: {
+      values: ['Kharif', 'Rabi', 'Zaid'],
+      message: '{VALUE} is not a valid season'
+    },
+    trim: true
+  },
   quantity: {
     type: Number,
     required: [true, 'Quantity is required'],

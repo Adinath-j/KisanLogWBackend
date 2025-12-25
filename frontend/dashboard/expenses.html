@@ -11,16 +11,22 @@
     <input type="date" id="expenseDate" class="form-input">
     <input type="text" id="expenseCrop" placeholder="Crop Name" class="form-input">
     <select id="expenseCategory" required class="form-input">
-  <option value="" disabled selected>Select Category</option>
-  <option value="Seeds">Seeds</option>
-  <option value="Fertilizers">Fertilizers</option>
-  <option value="Pesticides">Pesticides</option>
-  <option value="Labor">Labor</option>
-  <option value="Machinery">Machinery</option>
-  <option value="Fuel">Fuel</option>
-  <option value="Irrigation">Irrigation</option>
-  <option value="Other">Other</option>
-</select>
+      <option value="" disabled selected>Select Category</option>
+      <option value="Seeds">Seeds</option>
+      <option value="Fertilizers">Fertilizers</option>
+      <option value="Pesticides">Pesticides</option>
+      <option value="Labor">Labor</option>
+      <option value="Machinery">Machinery</option>
+      <option value="Fuel">Fuel</option>
+      <option value="Irrigation">Irrigation</option>
+      <option value="Other">Other</option>
+    </select>
+    <select id="expenseSeason" class="form-input">
+      <option value="">Select Season (Optional)</option>
+      <option value="Kharif">🌧️ Kharif (Jun-Oct)</option>
+      <option value="Rabi">❄️ Rabi (Nov-Mar)</option>
+      <option value="Zaid">☀️ Zaid (Apr-May)</option>
+    </select>
     <input type="text" id="expenseDescription" placeholder="Description" class="form-input">
     <input type="number" id="expenseAmount" placeholder="Amount (₹)" class="form-input" step="0.01">
     <button class="submit-btn" onclick="handleAddExpense()">
@@ -36,13 +42,16 @@
         <th>Date</th>
         <th>Crop</th>
         <th>Category</th>
+        <th>Season</th>
         <th>Description</th>
         <th style="text-align: right;">Amount</th>
         <th style="text-align: center;">Actions</th>
       </tr>
     </thead>
     <tbody id="expensesTableBody">
-      <tr><td colspan="6" style="text-align:center; color:#999; padding:40px;">No expenses recorded yet</td></tr>
+      <tr>
+        <td colspan="7" style="text-align:center; color:#999; padding:40px;">No expenses recorded yet</td>
+      </tr>
     </tbody>
   </table>
 </div>

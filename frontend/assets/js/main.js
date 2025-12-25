@@ -118,7 +118,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const analysis = window.SharedStorage ? window.SharedStorage.getCropAnalysis(expenses, yields) : [];
 
       // Build CSV content
-      let csv = "Farm Tracker - Comprehensive Report\n";
+      let csv = "KisanLog - Comprehensive Report\n";
       csv += `Generated on: ${new Date().toLocaleString()}\n\n`;
 
       // EXPENSES SECTION

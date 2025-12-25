@@ -38,7 +38,7 @@ window.exportToPDF = function () {
   // 1. Add Title
   doc.setFontSize(18);
   doc.setTextColor(46, 125, 50); // Green
-  doc.text("FarmTracker - Profitability Report", 14, 20);
+  doc.text("KisanLog - Profitability Report", 14, 20);
 
   // 2. Add Date
   doc.setFontSize(10);

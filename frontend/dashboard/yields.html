@@ -18,6 +18,12 @@
       <option value="liters">liters</option>
       <option value="units">units</option>
     </select>
+    <select id="yieldSeason" class="form-input">
+      <option value="">Select Season (Optional)</option>
+      <option value="Kharif">🌧️ Kharif (Jun-Oct)</option>
+      <option value="Rabi">❄️ Rabi (Nov-Mar)</option>
+      <option value="Zaid">☀️ Zaid (Apr-May)</option>
+    </select>
     <input type="number" id="yieldPrice" placeholder="Price per Unit (₹)" class="form-input" step="0.01">
     <button class="submit-btn blue" onclick="handleAddYield()">
       <span id="yieldSubmitText">Add Yield</span>
@@ -31,6 +37,7 @@
       <tr>
         <th>Date</th>
         <th>Crop</th>
+        <th>Season</th>
         <th style="text-align: right;">Quantity</th>
         <th style="text-align: right;">Price/Unit</th>
         <th style="text-align: right;">Total Revenue</th>
@@ -39,7 +46,7 @@
     </thead>
     <tbody id="yieldsTableBody">
       <tr>
-        <td colspan="6" style="text-align: center; color: #999; padding: 40px;">
+        <td colspan="7" style="text-align: center; color: #999; padding: 40px;">
           No yield records yet
         </td>
       </tr>
