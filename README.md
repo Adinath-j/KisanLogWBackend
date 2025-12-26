@@ -132,6 +132,7 @@ npm install
 ### Step 3: Configure Environment Variables
 
 Create a `.env` file in the `backend` directory:
+one is already there for local environment
 
 ```env
 PORT=5000
