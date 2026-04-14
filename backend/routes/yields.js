@@ -34,7 +34,7 @@ router.get('/', protect, async (req, res) => {
  * @access  Private
  */
 router.post('/', protect, async (req, res) => {
-  const { date, crop, quantity, unit, pricePerUnit } = req.body;
+  const { date, crop, quantity, unit, season, pricePerUnit } = req.body;
 
   try {
     // Validate required fields
@@ -60,6 +60,7 @@ router.post('/', protect, async (req, res) => {
       crop,
       quantity,
       unit,
+      season,
       pricePerUnit,
       totalRevenue: quantity * pricePerUnit // Will also be set by hook
     });

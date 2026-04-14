@@ -154,7 +154,6 @@
   }
 
   // 🔹 Save Edited Yield
-  // 🔹 Save Edited Yield
   async function saveEditedYield(id) {
     const crop = document.getElementById("editCrop").value.trim();
     const season = document.getElementById("editSeason").value;

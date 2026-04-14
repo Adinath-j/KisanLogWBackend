@@ -34,7 +34,7 @@ router.get('/', protect, async (req, res) => {
  * @access  Private
  */
 router.post('/', protect, async (req, res) => {
-  const { date, crop, category, description, amount } = req.body;
+  const { date, crop, category, season, description, amount } = req.body;
 
   try {
     // Validate required fields
@@ -59,6 +59,7 @@ router.post('/', protect, async (req, res) => {
       date,
       crop,
       category,
+      season,
       description,
       amount
     });

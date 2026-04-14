@@ -106,6 +106,9 @@ function renderCropComparisonChart() {
     window.cropComparisonChart.destroy();
   }
 
+  // ✅ Dynamic profit colors: green for profit, red for loss
+  const profitColors = cropData.map(c => c.profit >= 0 ? "#22C55E" : "#EF4444");
+
   window.cropComparisonChart = new Chart(ctx, {
     type: "bar",
     data: {
@@ -114,7 +117,7 @@ function renderCropComparisonChart() {
         {
           label: "Expenses",
           data: cropData.map(c => c.expenses),
-          backgroundColor: "#ef5350"
+          backgroundColor: "#703bf6"
         },
         {
           label: "Revenue",
@@ -124,7 +127,7 @@ function renderCropComparisonChart() {
         {
           label: "Profit",
           data: cropData.map(c => c.profit),
-          backgroundColor: "#66bb6a"
+          backgroundColor: profitColors
         }
       ]
     },

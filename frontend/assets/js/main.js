@@ -108,84 +108,162 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // ------------------------------------------------------
-  // CSV EXPORT FUNCTION
+  // CSV EXPORT FUNCTION (CHANGED TO PDF)
   // ------------------------------------------------------
-  window.exportToCSV = function () {
+  window.exportToCSV = async function () {
     try {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      // Get current user
+      const currentUser = await window.SharedStorage.checkSession();
+
       // Get current data
       const expenses = window.expenses || [];
       const yields = window.yields || [];
       const analysis = window.SharedStorage ? window.SharedStorage.getCropAnalysis(expenses, yields) : [];
 
-      // Build CSV content
-      let csv = "KisanLog - Comprehensive Report\n";
-      csv += `Generated on: ${new Date().toLocaleString()}\n\n`;
+      // Title with username
+      const reportDate = new Date().toLocaleString();
+      const userName = currentUser ? currentUser.fullName : 'User';
+      doc.setFontSize(16);
+      doc.text(`${userName}'s Farm Report`, 14, 15);
+      doc.setFontSize(10);
+      doc.text(`Generated on: ${reportDate}`, 14, 22);
 
-      // EXPENSES SECTION
-      csv += "=== EXPENSES ===\n";
-      csv += "Date,Crop,Category,Description,Amount\n";
-      expenses.forEach(e => {
-        const date = e.date ? new Date(e.date).toLocaleDateString() : '-';
-        const crop = (e.crop || '').replace(/,/g, ';'); // Replace commas to avoid CSV issues
-        const category = (e.category || '').replace(/,/g, ';');
-        const description = (e.description || '').replace(/,/g, ';');
-        const amount = e.amount || 0;
-        csv += `${date},${crop},${category},${description},${amount}\n`;
+      let yPosition = 30;
+
+      // ===== EXPENSES TABLE =====
+      doc.setFontSize(12);
+      doc.text("EXPENSES", 14, yPosition);
+      yPosition += 8;
+
+      const expensesTableData = expenses.map(e => [
+        e.date ? new Date(e.date).toLocaleDateString() : '-',
+        e.crop || '-',
+        e.category || '-',
+        e.season || '-',
+        e.description || '-',
+        `₹${(e.amount || 0).toFixed(2)}`
+      ]);
+
+      doc.autoTable({
+        startY: yPosition,
+        head: [['Date', 'Crop', 'Category', 'Season', 'Description', 'Amount']],
+        body: expensesTableData,
+        margin: 14,
+        theme: 'grid',
+        headStyles: { fillColor: [46, 125, 50], textColor: 255, fontSize: 9 },
+        bodyStyles: { fontSize: 8 },
+        columnStyles: { 5: { halign: 'right' } }
       });
 
-      // Calculate total expenses
+      yPosition = doc.lastAutoTable.finalY + 10;
+
+      // Total Expenses
       const totalExpenses = expenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
-      csv += `\nTotal Expenses:,,,₹${totalExpenses.toFixed(2)}\n\n`;
+      doc.setFontSize(10);
+      doc.text(`Total Expenses: ₹${totalExpenses.toFixed(2)}`, 14, yPosition);
+      yPosition += 15;
 
-      // YIELDS SECTION
-      csv += "=== YIELDS ===\n";
-      csv += "Date,Crop,Quantity,Unit,Price Per Unit,Total Revenue\n";
-      yields.forEach(y => {
-        const date = y.date ? new Date(y.date).toLocaleDateString() : '-';
-        const crop = (y.crop || '').replace(/,/g, ';');
-        const quantity = y.quantity || 0;
-        const unit = y.unit || '';
-        const pricePerUnit = y.pricePerUnit || 0;
-        const totalRevenue = y.totalRevenue || 0;
-        csv += `${date},${crop},${quantity},${unit},${pricePerUnit},${totalRevenue}\n`;
+      // ===== YIELDS TABLE =====
+      doc.setFontSize(12);
+      doc.text("YIELDS", 14, yPosition);
+      yPosition += 8;
+
+      const yieldsTableData = yields.map(y => [
+        y.date ? new Date(y.date).toLocaleDateString() : '-',
+        y.crop || '-',
+        y.season || '-',
+        `${y.quantity || 0} ${y.unit || ''}`,
+        `₹${(y.pricePerUnit || 0).toFixed(2)}`,
+        `₹${(y.totalRevenue || 0).toFixed(2)}`
+      ]);
+
+      doc.autoTable({
+        startY: yPosition,
+        head: [['Date', 'Crop', 'Season', 'Quantity', 'Price/Unit', 'Total Revenue']],
+        body: yieldsTableData,
+        margin: 14,
+        theme: 'grid',
+        headStyles: { fillColor: [59, 130, 246], textColor: 255, fontSize: 9 },
+        bodyStyles: { fontSize: 8 },
+        columnStyles: { 3: { halign: 'right' }, 4: { halign: 'right' }, 5: { halign: 'right' } }
       });
 
-      // Calculate total revenue
+      yPosition = doc.lastAutoTable.finalY + 10;
+
+      // Total Revenue
       const totalRevenue = yields.reduce((sum, y) => sum + (parseFloat(y.totalRevenue) || 0), 0);
-      csv += `\nTotal Revenue:,,,,,₹${totalRevenue.toFixed(2)}\n\n`;
+      doc.setFontSize(10);
+      doc.text(`Total Revenue: ₹${totalRevenue.toFixed(2)}`, 14, yPosition);
+      yPosition += 15;
 
-      // ANALYSIS SECTION
-      csv += "=== CROP PROFITABILITY ANALYSIS ===\n";
-      csv += "Crop,Total Expenses,Total Revenue,Net Profit,Profit Margin %\n";
-      analysis.forEach(c => {
-        const crop = (c.crop || '').replace(/,/g, ';');
-        const margin = c.revenue > 0 ? ((c.profit / c.revenue) * 100).toFixed(1) : 0;
-        csv += `${crop},${c.expenses.toFixed(2)},${c.revenue.toFixed(2)},${c.profit.toFixed(2)},${margin}%\n`;
+      // Check if we need a new page
+      if (yPosition > 250) {
+        doc.addPage();
+        yPosition = 15;
+      }
+
+      // ===== ANALYSIS TABLE =====
+      doc.setFontSize(12);
+      doc.text("CROP PROFITABILITY ANALYSIS", 14, yPosition);
+      yPosition += 8;
+
+      const analysisTableData = analysis.map(c => {
+        const margin = c.revenue > 0 ? ((c.profit / c.revenue) * 100).toFixed(1) : '0';
+        return [
+          c.crop || '-',
+          `₹${(c.expenses || 0).toFixed(2)}`,
+          `₹${(c.revenue || 0).toFixed(2)}`,
+          `₹${(c.profit || 0).toFixed(2)}`,
+          `${margin}%`
+        ];
       });
 
-      // Summary
+      doc.autoTable({
+        startY: yPosition,
+        head: [['Crop', 'Total Expenses', 'Total Revenue', 'Net Profit', 'Profit Margin %']],
+        body: analysisTableData,
+        margin: 14,
+        theme: 'grid',
+        headStyles: { fillColor: [139, 92, 246], textColor: 255, fontSize: 9 },
+        bodyStyles: { fontSize: 8 },
+        columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' }, 3: { halign: 'right' }, 4: { halign: 'right' } }
+      });
+
+      yPosition = doc.lastAutoTable.finalY + 15;
+
+      // Check if we need a new page
+      if (yPosition > 250) {
+        doc.addPage();
+        yPosition = 15;
+      }
+
+      // ===== SUMMARY =====
       const netProfit = totalRevenue - totalExpenses;
-      csv += `\n=== SUMMARY ===\n`;
-      csv += `Total Expenses:,₹${totalExpenses.toFixed(2)}\n`;
-      csv += `Total Revenue:,₹${totalRevenue.toFixed(2)}\n`;
-      csv += `Net Profit:,₹${netProfit.toFixed(2)}\n`;
+      doc.setFontSize(12);
+      doc.text("SUMMARY", 14, yPosition);
+      yPosition += 10;
 
-      // Create download link
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
+      doc.setFontSize(11);
+      doc.setTextColor(46, 125, 50);
+      doc.text(`Total Expenses: ₹${totalExpenses.toFixed(2)}`, 14, yPosition);
+      yPosition += 8;
 
-      link.setAttribute('href', url);
-      link.setAttribute('download', `Farm_Report_${new Date().toISOString().split('T')[0]}.csv`);
-      link.style.visibility = 'hidden';
+      doc.setTextColor(59, 130, 246);
+      doc.text(`Total Revenue: ₹${totalRevenue.toFixed(2)}`, 14, yPosition);
+      yPosition += 8;
 
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      doc.setTextColor(...(netProfit >= 0 ? [34, 197, 94] : [239, 68, 68]));
+      doc.text(`Net Profit: ₹${netProfit.toFixed(2)}`, 14, yPosition);
+      doc.setTextColor(0, 0, 0);
 
-      console.log('✅ CSV Report exported successfully');
+      // Save PDF
+      doc.save(`Farm_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+      console.log('✅ PDF Report exported successfully');
     } catch (error) {
-      console.error('❌ Error exporting CSV:', error);
+      console.error('❌ Error exporting PDF:', error);
       alert('Error exporting report. Please try again.');
     }
   };
